@@ -1,0 +1,18 @@
+[Unit]                             
+Description=dhcp message sniffer and counter for prometheus
+Documentation=https://github.com/mrizvic/dhcpmessage_exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=nobody
+Group=nobody
+ExecReload=/bin/kill -HUP 
+ExecStart=/usr/local/bin/dhcpmessage_exporter -promiscuous false -interfaces "ens192 ens193 ens224 ens256" -listen-address :8067
+
+SyslogIdentifier=dhcpmessage
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

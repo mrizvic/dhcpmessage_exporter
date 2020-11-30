@@ -127,11 +127,11 @@ sudo systemctl status dhcpmessage_exporter.service
    CGroup: /system.slice/dhcpmessage_exporter.service
            └─16948 /usr/local/bidhcpmessage_exporter-linux-amd64 -interfaces ens192 ens193 ens224 ens256 -listen-address :8067
 
-Nov 30 08:19:38 dhcp-brihta systemd[1]: Started dhcp message sniffer and counter for prometheus.
-Nov 30 08:19:38 dhcp-brihta dhcpmessage[16948]: 2020/11/30 08:19:38 Beginning to serve on :8067
-Nov 30 08:19:38 dhcp-brihta dhcpmessage[16948]: 2020/11/30 08:19:38 BPF FILTER ON INTERFACE ens224: udp and port 67
-Nov 30 08:19:38 dhcp-brihta dhcpmessage[16948]: 2020/11/30 08:19:38 BPF FILTER ON INTERFACE ens192: udp and port 67
-Nov 30 08:19:38 dhcp-brihta dhcpmessage[16948]: 2020/11/30 08:19:38 BPF FILTER ON INTERFACE ens256: udp and port 67
-Nov 30 08:19:38 dhcp-brihta dhcpmessage[16948]: 2020/11/30 08:19:38 BPF FILTER ON INTERFACE ens193: udp and port 67
+Nov 30 08:19:38 dhcp-lab systemd[1]: Started dhcp message sniffer and counter for prometheus.
+Nov 30 08:19:38 dhcp-lab dhcpmessage[16948]: 2020/11/30 08:19:38 Beginning to serve on :8067
+Nov 30 08:19:38 dhcp-lab dhcpmessage[16948]: 2020/11/30 08:19:38 BPF FILTER ON INTERFACE ens224: udp and port 67
+Nov 30 08:19:38 dhcp-lab dhcpmessage[16948]: 2020/11/30 08:19:38 BPF FILTER ON INTERFACE ens192: udp and port 67
+Nov 30 08:19:38 dhcp-lab dhcpmessage[16948]: 2020/11/30 08:19:38 BPF FILTER ON INTERFACE ens256: udp and port 67
+Nov 30 08:19:38 dhcp-lab dhcpmessage[16948]: 2020/11/30 08:19:38 BPF FILTER ON INTERFACE ens193: udp and port 67
 ```
 

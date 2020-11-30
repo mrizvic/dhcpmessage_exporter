@@ -20,6 +20,7 @@ Zadeva posluša (pcap) na različnih mrežnih vmesnikih za dhcp promet (bpf filt
 - nak
 - inform
 - release
+- decline
 
 Statistika je na voljo preko HTTP v obliki, ki je primerna za prometheus:
 
@@ -48,7 +49,7 @@ Zato :)
 ```
 Usage of ./dhcpmessage_exporter:
   -debug
-        Print all packets to stdout
+        Print filtered packets to stdout
   -filter string
         Change if needed :) (default "udp and port 67")
   -interfaces string

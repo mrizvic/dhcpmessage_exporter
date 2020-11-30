@@ -2,8 +2,6 @@ package main
 
 import (
    "os"
-   "os/signal"
-   "syscall"
    "github.com/google/gopacket"
    "github.com/google/gopacket/pcap"
    "github.com/google/gopacket/layers"
@@ -48,7 +46,7 @@ var (
   interfaces  = flag.String("interfaces", "eth0", "One or many interfaces to listen for DHCP packets. Use whitespace for separator.")
   promiscuous =   flag.Bool("promisc", false, "Set to true if you need interface in promiscuous mode.")
   filter      = flag.String("filter", "udp and port 67", "Change if needed :)")
-  debug       =   flag.Bool("debug", false, "Print all packets to stdout")
+  debug       =   flag.Bool("debug", false, "Print filtered packets to stdout")
 )
 
 func main() {
@@ -85,26 +83,6 @@ func main() {
   log.Printf("HTTP endpoint /metrics ready on %s\n", *listenAddr)
   log.Fatal(http.ListenAndServe(*listenAddr, nil))
 
-  // ZGORNJI http.Handle() JE PREVZEL KONTROLO TAKO DA NE RABMO SVOJEGA SIGNAL HANDLERJA
-  //sleep()
-}
-
-func sleep() {
-
-    sigs := make(chan os.Signal, 1)
-    done := make(chan bool, 1)
-
-    signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-    go func() {
-        sig := <-sigs
-        log.Printf("SIGNAL RECEIVED: %s\n",sig)
-        done <- true
-    }()
-
-    log.Println("awaiting signal")
-    <-done
-    log.Println("exiting")
 }
 
 func capture(iface string) {

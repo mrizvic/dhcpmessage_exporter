@@ -1,7 +1,6 @@
 package main
 
 import (
-   "os"
    "github.com/google/gopacket"
    "github.com/google/gopacket/pcap"
    "github.com/google/gopacket/layers"

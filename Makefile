@@ -17,7 +17,7 @@ BINARY = dhcpmessage_exporter
 GOARCH = amd64
 
 bin:
-	env CGO_ENABLED=1 GOOS=$(OS) GOARCH=$(GOARCH) go build -o ${BINARY}-$(OS)-${GOARCH} . ;
+	env CGO_ENABLED=1 GOOS=$(OS) GOARCH=$(GOARCH) go build -ldflags "-X main.GitCommit=${TAG}" -o ${BINARY}-$(OS)-${GOARCH} . ;
 	strip ${BINARY}-$(OS)-${GOARCH}
 	@echo "sudo setcap cap_net_raw,cap_net_admin=eip ${BINARY}-$(OS)-${GOARCH}"
 

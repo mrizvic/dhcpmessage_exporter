@@ -1,5 +1,5 @@
 [Unit]                             
-Description=dhcp message sniffer and counter for prometheus
+Description=capture dhcp messages, count by message type, export for prometheus
 Documentation=https://github.com/mrizvic/dhcpmessage_exporter
 Wants=network-online.target
 After=network-online.target
@@ -9,7 +9,8 @@ Type=simple
 User=nobody
 Group=nobody
 ExecReload=/bin/kill -HUP 
-ExecStart=/usr/local/bin/dhcpmessage_exporter -promiscuous false -interfaces "ens192 ens193 ens224 ens256" -listen-address :8067
+ExecStart=/usr/local/bin/dhcpmessage_exporter-linux-amd64 -interfaces="ens192 ens193 ens224 ens256" -listen-address=":8067" -promisc=false
+
 
 SyslogIdentifier=dhcpmessage
 Restart=always

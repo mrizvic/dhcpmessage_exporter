@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+	"fmt"
 	"flag"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -53,12 +55,19 @@ var (
 	promiscuous = flag.Bool("promisc", false, "Set to true if you need interface in promiscuous mode.")
 	filter      = flag.String("filter", "udp and port 67", "Change if needed :)")
 	debug       = flag.Bool("debug", false, "Print filtered packets to stdout")
+	bVersion    = flag.Bool("version", false, "Show version")
 )
 
 func main() {
 
 	// CLI ARGUMENTS
 	flag.Parse()
+
+	if (*bVersion) {
+		fmt.Println(GitCommit)
+		os.Exit(0)
+	}
+
 	log.Printf("version=%s", GitCommit)
 	log.Printf("filter=%s", *filter)
 	log.Printf("listen-address=%s", *listenAddr)

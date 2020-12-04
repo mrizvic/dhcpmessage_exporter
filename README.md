@@ -12,7 +12,7 @@ It listens (pcap) on specific network interfaces for dhcp traffic (bpf filter: u
 Stats are available over HTTP in format suitable for prometheus:
 
 ```
-dhcp-lab$ curl -s localhost:8067/metrics |grep dhcp
+dhcp-lab$ curl -s localhost:8067/metrics
 # HELP dhcp_messages_processed_total The total number of processed DHCP messagess
 # TYPE dhcp_messages_processed_total counter
 dhcp_messages_processed_total{interface="ens192",type="ack"} 0
@@ -57,7 +57,10 @@ packets_captured_total{interface="ens256",type="all"} 30
 
 # Grafana dashboard
 
-![grafana](https://github.com/mrizvic/dhcpmessage_exporter/blob/main/grafana-dhcpmessage_exporter.png)
+Link to [dashboard](https://grafana.com/grafana/dashboards/13513)
+
+Screenshot:
+![screenshot](https://github.com/mrizvic/dhcpmessage_exporter/blob/main/grafana-dhcpmessages-dashboard.png)
 
 
 # Command line interface
@@ -141,25 +144,25 @@ sudo systemctl enable dhcpmessage_exporter.service
 Check status:
 ```
 sudo systemctl status dhcpmessage_exporter.service
-● dhcpmessage_exporter.service -capture dhcp messages, count by message type and export for prometheus
+● dhcpmessage_exporter.service - dhcp message sniffer and counter for prometheus
    Loaded: loaded (/etc/systemd/system/dhcpmessage_exporter.service; disabled; vendor preset: disabled)
-   Active: active (running) since Mon 2020-11-30 08:19:38 CET; 14min ago
+   Active: active (running) since Fri 2020-12-04 17:47:09 CET; 31min ago
      Docs: https://github.com/mrizvic/dhcpmessage_exporter
- Main PID: 16948 (dhcpmessage_exp)
-    Tasks: 13 (limit: 23583)
-   Memory: 16.6M
+ Main PID: 14378 (dhcpmessage_exp)
+    Tasks: 10 (limit: 23583)
+   Memory: 16.4M
    CGroup: /system.slice/dhcpmessage_exporter.service
-           └─16948 /usr/local/bidhcpmessage_exporter-linux-amd64 -interfaces ens192 ens193 ens224 ens256 -listen-address :8067
+           └─14378 /usr/local/bin/dhcpmessage_exporter-linux-amd64 -interfaces=ens192 ens193 ens224 ens256 -listen-address=:8067
 
-Dec 04 17:21:10 dhcp-lab dhcpmessage[11035]: 2020/12/04 17:21:10 filter=udp and port 67
-Dec 04 17:21:10 dhcp-lab dhcpmessage[11035]: 2020/12/04 17:21:10 listen-address=:8067
-Dec 04 17:21:10 dhcp-lab dhcpmessage[11035]: 2020/12/04 17:21:10 interfaces=ens192 ens193 ens224 ens256
-Dec 04 17:21:10 dhcp-lab dhcpmessage[11035]: 2020/12/04 17:21:10 promisc=false
-Dec 04 17:21:10 dhcp-lab dhcpmessage[11035]: 2020/12/04 17:21:10 debug=false
-Dec 04 17:21:10 dhcp-lab dhcpmessage[11035]: 2020/12/04 17:21:10 HTTP endpoint /metrics ready on :8067
-Dec 04 17:21:10 dhcp-lab dhcpmessage[11035]: 2020/12/04 17:21:10 Capturing on ens224: udp and port 67
-Dec 04 17:21:10 dhcp-lab dhcpmessage[11035]: 2020/12/04 17:21:10 Capturing on ens192: udp and port 67
-Dec 04 17:21:10 dhcp-lab dhcpmessage[11035]: 2020/12/04 17:21:10 Capturing on ens256: udp and port 67
-Dec 04 17:21:10 dhcp-lab dhcpmessage[11035]: 2020/12/04 17:21:10 Capturing on ens193: udp and port 67
+Dec 04 17:47:09 dhcp-lab dhcpmessage[14378]: 2020/12/04 17:47:09 filter=udp and port 67
+Dec 04 17:47:09 dhcp-lab dhcpmessage[14378]: 2020/12/04 17:47:09 listen-address=:8067
+Dec 04 17:47:09 dhcp-lab dhcpmessage[14378]: 2020/12/04 17:47:09 interfaces=ens192 ens193 ens224 ens256
+Dec 04 17:47:09 dhcp-lab dhcpmessage[14378]: 2020/12/04 17:47:09 promisc=false
+Dec 04 17:47:09 dhcp-lab dhcpmessage[14378]: 2020/12/04 17:47:09 debug=false
+Dec 04 17:47:09 dhcp-lab dhcpmessage[14378]: 2020/12/04 17:47:09 HTTP endpoint /metrics ready on :8067
+Dec 04 17:47:09 dhcp-lab dhcpmessage[14378]: 2020/12/04 17:47:09 Capturing on ens192: udp and port 67
+Dec 04 17:47:09 dhcp-lab dhcpmessage[14378]: 2020/12/04 17:47:09 Capturing on ens256: udp and port 67
+Dec 04 17:47:09 dhcp-lab dhcpmessage[14378]: 2020/12/04 17:47:09 Capturing on ens193: udp and port 67
+Dec 04 17:47:09 dhcp-lab dhcpmessage[14378]: 2020/12/04 17:47:09 Capturing on ens224: udp and port 67
 ```
 

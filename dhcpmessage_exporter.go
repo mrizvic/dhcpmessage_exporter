@@ -13,6 +13,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"runtime/debug"
+        "encoding/hex"
 )
 
 var (
@@ -38,7 +40,7 @@ var (
 			Name: "dhcp_messages_processed_total",
 			Help: "The total number of processed DHCP messagess",
 		},
-		[]string{"type"},
+		[]string{"type", "interface"},
 	)
 
 	packetCounter = prometheus.NewCounterVec(
@@ -46,7 +48,7 @@ var (
 			Name: "packets_captured_total",
 			Help: "The total number of packets that passed bpf filter",
 		},
-		[]string{"type"},
+		[]string{"type", "interface"},
 	)
 
 	// CLI ARGUMENTS
@@ -54,7 +56,7 @@ var (
 	interfaces  = flag.String("interfaces", "eth0", "One or many interfaces to listen for DHCP packets. Use whitespace for separator.")
 	promiscuous = flag.Bool("promisc", false, "Set to true if you need interface in promiscuous mode.")
 	filter      = flag.String("filter", "udp and port 67", "Change if needed :)")
-	debug       = flag.Bool("debug", false, "Print filtered packets to stdout")
+	bDebug      = flag.Bool("debug", false, "Print filtered packets to stdout")
 	bVersion    = flag.Bool("version", false, "Show version")
 )
 
@@ -73,24 +75,26 @@ func main() {
 	log.Printf("listen-address=%s", *listenAddr)
 	log.Printf("interfaces=%s", *interfaces)
 	log.Printf("promisc=%t", *promiscuous)
-	log.Printf("debug=%t", *debug)
+	log.Printf("debug=%t", *bDebug)
 
+	// GOROUTINE PER DEVICE
 	ifaces := strings.Fields(*interfaces)
 	for _, iface := range ifaces {
-		// GO CAPTURE PER DEVICE
+
+		// INITIALIZE VALUES
+		packetCounter.With(prometheus.Labels{"type": "all", "interface": iface}).Add(0)
+		dhcpMsgs.With(prometheus.Labels{"type": "discover", "interface": iface}).Add(0)
+		dhcpMsgs.With(prometheus.Labels{"type": "offer", "interface": iface}).Add(0)
+		dhcpMsgs.With(prometheus.Labels{"type": "request", "interface": iface}).Add(0)
+		dhcpMsgs.With(prometheus.Labels{"type": "ack", "interface": iface}).Add(0)
+		dhcpMsgs.With(prometheus.Labels{"type": "nak", "interface": iface}).Add(0)
+		dhcpMsgs.With(prometheus.Labels{"type": "release", "interface": iface}).Add(0)
+		dhcpMsgs.With(prometheus.Labels{"type": "decline", "interface": iface}).Add(0)
+		dhcpMsgs.With(prometheus.Labels{"type": "inform", "interface": iface}).Add(0)
+
 		go capture(iface)
 	}
 
-	// INITIALIZE VALUES
-	dhcpMsgs.With(prometheus.Labels{"type": "discover"}).Add(0)
-	dhcpMsgs.With(prometheus.Labels{"type": "offer"}).Add(0)
-	dhcpMsgs.With(prometheus.Labels{"type": "request"}).Add(0)
-	dhcpMsgs.With(prometheus.Labels{"type": "ack"}).Add(0)
-	dhcpMsgs.With(prometheus.Labels{"type": "nak"}).Add(0)
-	dhcpMsgs.With(prometheus.Labels{"type": "release"}).Add(0)
-	dhcpMsgs.With(prometheus.Labels{"type": "decline"}).Add(0)
-	dhcpMsgs.With(prometheus.Labels{"type": "inform"}).Add(0)
-	packetCounter.With(prometheus.Labels{"type": "all"}).Add(0)
 
 	// HTTP ENDPOINT /metrics FOR PROMETHEUS
 	prometheus.MustRegister(dhcpMsgs)
@@ -101,22 +105,27 @@ func main() {
 
 }
 
-func checkError(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func capture(iface string) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("stacktrace from panic: \n" + string(debug.Stack()))
+		}
+	}()
 
         // OPEN INTERFACE
 	handle, err = pcap.OpenLive(iface, snapshot_len, *promiscuous, timeout)
-	checkError(err)
+	if err != nil {
+		log.Fatal("pcap.OpenLive() ERROR:",err)
+	}
 	defer handle.Close()
 
 	// SET BPF FILTER
 	err = handle.SetBPFFilter(*filter)
-	checkError(err)
+	if err != nil {
+		log.Fatal("handle.SetBPFFilter() ERROR:",err)
+	}
+
 	log.Printf("Capturing on %s: %s\n", iface, *filter)
 
 	parser := gopacket.NewDecodingLayerParser(layers.LayerTypeEthernet, &eth, &ip4, &ip6, &tcp, &udp, &dhcpv4)
@@ -124,22 +133,47 @@ func capture(iface string) {
 
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
+        //for packet, err := packetSource.NextPacket() {
 	for {
 		// FETCH PACKET
 		packet, err := packetSource.NextPacket()
-		checkError(err)
 
-		if *debug {
+		// CATCH READ ERRORS
+		if err != nil {
+			log.Fatal("packetSource.NextPacket() ERROR:",err)
+                        fmt.Println(hex.Dump(packet.Data()))
+                        fmt.Printf("%#v\n", packet.Data())
+                        fmt.Println("Error reading in packet END")
+			continue
+                }
+
+		// CATCH PACKET DECODER ERRORS
+                if packet.ErrorLayer() != nil {
+			log.Fatal("packetSource.ErrorLayer() ERROR:",err)
+                        fmt.Println("\n\n\nError decoding packet:", packet.ErrorLayer().Error())
+                        fmt.Println(hex.Dump(packet.Data()))
+                        fmt.Printf("%#v\n", packet.Data())
+                        for _, l := range packet.Layers() {
+                                fmt.Printf("--- LAYER %v ---\n%#v\n\n", l.LayerType(), l)
+                        }
+			continue
+                }
+
+		if *bDebug {
 			log.Println(packet)
 		}
 
 		// COUNT PACKETS THAT PASS BPF FILTER
-		packetCounter.With(prometheus.Labels{"type": "all"}).Inc()
+		packetCounter.With(prometheus.Labels{"type": "all", "interface": iface}).Inc()
 
 		// RUN DECODER
 		err = parser.DecodeLayers(packet.Data(), &decoded)
-		checkError(err)
+		if err != nil {
+			log.Fatal("parser.DecodeLayer() ERROR:",err)
+			continue
+		}
 
+		// FOR EACH DECODED LAYER
 		for _, layerType := range decoded {
 
 			switch layerType {
@@ -155,28 +189,28 @@ func capture(iface string) {
 						switch layers.DHCPMsgType(o.Data[0]) {
 
 						case layers.DHCPMsgTypeDiscover:
-							dhcpMsgs.With(prometheus.Labels{"type": "discover"}).Inc()
+							dhcpMsgs.With(prometheus.Labels{"type": "discover", "interface": iface}).Inc()
 
 						case layers.DHCPMsgTypeOffer:
-							dhcpMsgs.With(prometheus.Labels{"type": "offer"}).Inc()
+							dhcpMsgs.With(prometheus.Labels{"type": "offer", "interface": iface}).Inc()
 
 						case layers.DHCPMsgTypeRequest:
-							dhcpMsgs.With(prometheus.Labels{"type": "request"}).Inc()
+							dhcpMsgs.With(prometheus.Labels{"type": "request", "interface": iface}).Inc()
 
 						case layers.DHCPMsgTypeAck:
-							dhcpMsgs.With(prometheus.Labels{"type": "ack"}).Inc()
+							dhcpMsgs.With(prometheus.Labels{"type": "ack", "interface": iface}).Inc()
 
 						case layers.DHCPMsgTypeNak:
-							dhcpMsgs.With(prometheus.Labels{"type": "nak"}).Inc()
+							dhcpMsgs.With(prometheus.Labels{"type": "nak", "interface": iface}).Inc()
 
 						case layers.DHCPMsgTypeRelease:
-							dhcpMsgs.With(prometheus.Labels{"type": "release"}).Inc()
+							dhcpMsgs.With(prometheus.Labels{"type": "release", "interface": iface}).Inc()
 
 						case layers.DHCPMsgTypeDecline:
-							dhcpMsgs.With(prometheus.Labels{"type": "decline"}).Inc()
+							dhcpMsgs.With(prometheus.Labels{"type": "decline", "interface": iface}).Inc()
 
 						case layers.DHCPMsgTypeInform:
-							dhcpMsgs.With(prometheus.Labels{"type": "inform"}).Inc()
+							dhcpMsgs.With(prometheus.Labels{"type": "inform", "interface": iface}).Inc()
 
 						}
 					}

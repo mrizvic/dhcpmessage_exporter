@@ -140,7 +140,7 @@ func capture(iface string) {
 
 		// CATCH READ ERRORS
 		if err != nil {
-			log.Fatal("packetSource.NextPacket() ERROR:",err)
+			log.Println("packetSource.NextPacket() ERROR:",err)
                         fmt.Println(hex.Dump(packet.Data()))
                         fmt.Printf("%#v\n", packet.Data())
                         fmt.Println("Error reading in packet END")
@@ -149,7 +149,7 @@ func capture(iface string) {
 
 		// CATCH PACKET DECODER ERRORS
                 if packet.ErrorLayer() != nil {
-			log.Fatal("packetSource.ErrorLayer() ERROR:",err)
+			log.Println("packetSource.ErrorLayer() ERROR:",err)
                         fmt.Println("\n\n\nError decoding packet:", packet.ErrorLayer().Error())
                         fmt.Println(hex.Dump(packet.Data()))
                         fmt.Printf("%#v\n", packet.Data())
@@ -169,7 +169,7 @@ func capture(iface string) {
 		// RUN DECODER
 		err = parser.DecodeLayers(packet.Data(), &decoded)
 		if err != nil {
-			log.Fatal("parser.DecodeLayer() ERROR:",err)
+			log.Println("parser.DecodeLayer() ERROR:",err)
 			continue
 		}
 

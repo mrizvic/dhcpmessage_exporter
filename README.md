@@ -124,7 +124,7 @@ Type=simple
 User=nobody
 Group=nobody
 ExecReload=/bin/kill -HUP 
-ExecStart=/usr/local/bin/dhcpmessage_exporter-linux-amd64 -promiscuous=false -interfaces="ens192 ens193 ens224 ens256" -listen-address=":8067"
+ExecStart=/usr/local/bin/dhcpmessage_exporter-linux-amd64 -promisc=false -interfaces="ens192 ens193 ens224 ens256" -listen-address=":8067"
 
 SyslogIdentifier=dhcpmessage
 Restart=always
